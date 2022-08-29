@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black-Scholes Option Value</title>
+</head>
+<body>
+
+    <style>
+        #portInput *, #portInput :before, #portInput :after{box-sizing: border-box;}
+/*#portInput{background-color: #ecb6ec;}*/
+#portInput input:focus-visible,#portInput input:focus, #portInput input:hover{outline: none!important;}
+#portInput p{margin:0 0 3px;font-size: 17px;line-height: 20px;}#portInput .bold{font-weight: 600;}
+#portInput.myrow,  #portInput .myrow{ display: -webkit-box;display: -ms-flexbox;display: flex;-ms-flex-wrap: wrap;flex-wrap: wrap;align-items: center;padding:15px 0!important;transition: all 2s linear;align-items: center;}
+#portInput .mycol, #portInput .mycol1{-webkit-box-flex: 0;-ms-flex: 0 0 50%;flex: 0 0 50%;max-width: 50%;padding:15px;}
+#portInput .mycolfull{-webkit-box-flex: 0;-ms-flex: 0 0 100%;flex: 0 0 100%;max-width: 100%;padding:20px 15px 15px;}
+#portInput input{width: 100%!important;outline: none;border:1px solid silver!important; font-size: 17px;background-color: white;padding:7px 10px!important;width: 100%;border-radius: 4px;color:black!important;text-align:left!important;}
+#portInput input:disabled{background-color: black;padding:4px 10px!important; font-weight: 600;text-decoration: underline;color: white!important;}
+#portInput button{color: white;background-color:blue!important;border: 1px solid silver; border-radius: 7px;font-weight:500;font-size: 17px;padding:7px 30px;}
+#portInput hr{background-color: silver;border-top: 1px solid silver;margin:10px;border-bottom: none;}
+#portInput tr:last-of-type td:not(input){background-color:none;}
+.my-px-10{padding-right:7%!important;padding-left: 7%!important;}
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { margin-left: 10px; }input[type=number]{ -moz-appearance:textfield;} 
+#portInput .output .mycol, #portInput .output .mycol1 {  padding-top: 5px!important;padding-bottom: 5px!important;}
+@media(max-width: 700px){
+    .my-px-10{padding-right:10px!important;padding-left: 10px!important;}
+    #portInput .mycol1{-ms-flex: 0 0 100%;flex: 0 0 100%;max-width: 100%;padding:7px 10px;}
+    #portInput .mycol{padding:7px 6px;}
+    #portInput .mycolfull{padding:15px 10px 10px;}
+}
+    </style>
+
+
+    <div id="portInput">
+        <h2 class="my-px-10" style="margin: 0; padding-top:18px;padding-bottom: 18px;background-color: black!important;color: white!important;line-height:34px;font-size: 30px;">Black-Scholes Option Value</h2>
+
+        <div class="myrow">
+            <div class="mycol my-px-10">
+                <p>Stock Price now (P)<span style="color: red;">*</span>:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="stockPrice">
+            </div>
+
+            <div class="mycol my-px-10">
+                <p>Exercise Price of Option (EX)<span style="color: red;">*</span>:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="exercisePrice">
+            </div>
+
+            <div class="mycol my-px-10">
+                <p>Number of periods to Exercise in years (t)<span style="color: red;">*</span>:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="nPeriods">
+            </div>
+
+            <div class="mycol my-px-10">
+                <p>Compounded Risk-Free Interest Rate (rf)<span style="color: red;">*</span>:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="compoundedRisk">
+            </div>
+
+            <div class="mycol my-px-10">
+                <p>Standard Deviation (annualized s)<span style="color: red;">*</span>:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="standardDeviation">
+            </div>
+
+            
+            <div class="mycol my-px-10">
+            </div>    
+            <div class="mycol my-px-10">
+                <button onclick="myCalFunction()">Submit</button>
+            </div>
+        </div>
+
+        <hr>
+        <div class="myrow output">
+            <div class="mycol my-px-10">
+                <p>Value of Call:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="valueCal" disabled>
+            </div>
+
+            <div class="mycol my-px-10">
+                <p>Value of Put:</p>
+            </div>
+            <div class="mycol my-px-10">
+                <input type="number" id="valuePut" disabled>
+            </div>
+
+        </div>
+    </div>
+    
+    <script>
+        function myCalFunction(){
+            stockPriceEl        = document.getElementById('stockPrice'); //c4
+            exercisePriceEl     = document.getElementById('exercisePrice'); //c5
+            nPeriodsEl          = document.getElementById('nPeriods'); //c6
+            compoundedRiskEl    = document.getElementById('compoundedRisk'); //c7 %
+            standardDeviationEl = document.getElementById('standardDeviation'); //c8 %
+
+            if(stockPriceEl.value == '' || exercisePriceEl == '' || nPeriodsEl == '' || compoundedRiskEl == '' || standardDeviationEl == ''){
+                alert('Please fill all input valuesm')
+                return '';
+            }
+            expValue = compoundedRiskEl.value*nPeriodsEl.value*(-1)/100;
+            paresentVal = exercisePriceEl.value*( Math.exp(expValue) );
+            //Present Value of Exercise Price (PV(EX)) =C5*EXP(-C7*C6), 12
+
+            sandT = standardDeviationEl.value * Math.pow(nPeriodsEl.value, 0.5)/100;//s*t^.5, C8*C6^0.5, 13
+
+            d1Val = (Math.log( stockPriceEl.value/exercisePriceEl.value ))+( (compoundedRiskEl.value/100+(standardDeviationEl.value*standardDeviationEl.value/20000))*nPeriodsEl.value )/sandT; //(LN(C4/C5)+(C7+C8*C8/2)*C6)/(C8*C6^0.5), 14
+
+            console.log( (compoundedRiskEl.value/100+(standardDeviationEl.value*standardDeviationEl.value/20000))*nPeriodsEl.value )
+            //console.log('sandT pow = ',Math.pow(nPeriodsEl.value, 0.5))
+
+            d2Val = d1Val - sandT; //C14-C13, 15
+            deltaN = normalcdf(d1Val, 0, 1, true); //Delta N(d1) Normal Cumulative Density Function,  NORMDIST, NORMDIST(C14,0,1,TRUE), 16
+
+            bankLoan = normalcdf(d2Val, 0, 1, true)*paresentVal;//Bank Loan  N(d2)*PV(EX), NORMDIST(C15,0,1,TRUE)*C12, 17
+            console.log('deltaN = '+deltaN+', d2Val = '+d2Val+', d1Val = '+d1Val+', sandT = '+sandT+', paresentVal = '+paresentVal+', bankload = '+bankLoan);
+
+            valueCalEl = ( deltaN * stockPriceEl.value ) - bankLoan;
+            valuePutEl = valueCalEl + paresentVal - stockPriceEl.value;
+
+            document.getElementById("valueCal").value =  parseFloat(valueCalEl).toFixed(4);//C16*C4-C17, 20
+            document.getElementById('valuePut').value = parseFloat(valuePutEl).toFixed(4);
+
+        }
+
+        function _getNDistPDFFun(x, mean, stdev){
+            const sqrt2PI = Math.SQRT2 * Math.sqrt(Math.PI);
+            let frac = (x - mean) / stdev;
+            return Math.exp(-.5 * frac * frac) / (sqrt2PI * stdev);
+        }
+
+        function _getNDistCDFFun(x, mean, stdev)
+        {
+            const a1 = 5.75885480458;
+            const a2 = 2.62433121679;
+            const a3 = 5.92885724438;
+            const b1 = -29.8213557807;
+            const b2 = 48.6959930692;
+            const c1 = -0.000000038052;
+            const c2 = 0.000398064794;
+            const c3 = -0.151679116635;
+            const c4 = 4.8385912808;
+            const c5 = 0.742380924027;
+            const c6 = 3.99019417011;
+            const con = 1.28;
+            const d1 = 1.00000615302;
+            const d2 = 1.98615381364;
+            const d3 = 5.29330324926;
+            const d4 = -15.1508972451;
+            const d5 = 30.789933034;
+            const ltone = 7.0;
+            const p = 0.398942280444;
+            const q = 0.39990348504;
+            const r = 0.398942280385;
+            const utzero = 18.66;
+
+            let up = false;
+            let value;
+            let y;
+
+            // For non-standard NDist
+            let z = (x - mean) / stdev;
+
+            if (z < 0)
+            {
+                up = true;
+                z = -z;
+            }
+
+            if (ltone < z && (!up || utzero < z))
+            {
+                value = !up * 1;
+                return value;
+            }
+
+            y = 0.5 * z * z;
+
+            if (z <= con)
+            {
+                value = 0.5 - z * (p - q * y 
+                / (y + a1 + b1 
+                    / (y + a2 + b2 
+                    / (y + a3))));
+            }
+            else
+            {
+                value = r * Math.exp(-y) 
+                / (z + c1 + d1 
+                    / (z + c2 + d2 
+                    / (z + c3 + d3 
+                        / (z + c4 + d4 
+                        / (z + c5 + d5 
+                            / (z + c6))))));
+            }
+
+            if (!up)
+                value = 1 - value;
+
+            return value;
+        }
+
+        function normalcdf(x, mean, stdev, cumulative){
+        return cumulative 
+            ? _getNDistCDFFun(x, mean, stdev)
+            : _getNDistPDFFun(x, mean, stdev);
+        }
+
+
+    </script>
+</body>
+</html>
